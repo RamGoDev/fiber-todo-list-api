@@ -25,7 +25,7 @@ func Connect() error {
 		return err
 	}
 
-	fmt.Printf("Connect %s Database Successfully", driver)
+	fmt.Printf("Connect %s Database Successfully\n", driver)
 
 	return nil
 }

@@ -28,7 +28,6 @@ func MysqlUrl() string {
 func MysqlConnect() error {
 	var err error
 	url := MysqlUrl()
-	fmt.Println(url)
 	DB, err = gorm.Open(mysql.Open(url), MysqlConfig())
 	return err
 }
