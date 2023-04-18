@@ -1,0 +1,35 @@
+version: '3.6'
+services:
+  mysql:
+    platform: linux/arm64/v8
+    container_name: mysql-todo
+    image: "mysql:latest"
+    volumes:
+      - "./dbdata:/var/lib/mysql/"
+    env_file:
+      - ./docker/.env
+    ports:
+      - "${DOCKER_MYSQL_PORT:-3307}:3306"
+    networks:
+      - todo_api_network
+
+  app:
+    platform: linux/amd64
+    container_name: app-todo
+    build:
+      context: .
+      dockerfile: "./docker/go/Dockerfile"
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+    restart: on-failure
+    volumes:
+      - .:/app
+    ports:
+      - "${DOCKER_APP_PORT:-3000}:3000"
+    networks:
+      - todo_api_network
+
+networks:
+  todo_api_network:

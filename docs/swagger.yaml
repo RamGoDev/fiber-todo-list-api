@@ -1,0 +1,766 @@
+basePath: /
+definitions:
+  helpers.Error:
+    properties:
+      error:
+        default: true
+        type: boolean
+      message:
+        default: error
+        type: string
+    type: object
+  helpers.Failed:
+    properties:
+      data: {}
+      error:
+        default: true
+        type: boolean
+      message:
+        default: failed
+        type: string
+    type: object
+  helpers.Success:
+    properties:
+      data: {}
+      error:
+        default: false
+        type: boolean
+      message:
+        default: success
+        type: string
+    type: object
+  validators_v1.Login:
+    properties:
+      email:
+        default: super@todo.id
+        type: string
+      password:
+        default: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  validators_v1.Profile:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    type: object
+  validators_v1.Register:
+    properties:
+      email:
+        default: newuser1@todo.id
+        description: 'FIXME: add unique validation'
+        type: string
+      name:
+        default: New user 1
+        type: string
+      password:
+        default: password123
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  validators_v1.Todo:
+    properties:
+      description:
+        default: description
+        type: string
+      is_done:
+        default: false
+        type: boolean
+      title:
+        default: title
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  validators_v1.User:
+    properties:
+      email:
+        default: newuser1@todo.id
+        description: 'FIXME: add unique validation'
+        type: string
+      name:
+        default: New user 1
+        type: string
+      password:
+        default: password123
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+info:
+  contact:
+    email: ramdaninformatika@gmail.com
+    name: Ramdani
+    url: https://github.com/ramdani15/
+  description: This is a Todo List API swagger
+  title: Todo List API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with Email and Password
+      parameters:
+      - description: email
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      summary: Login
+      tags:
+      - Auth
+  /api/v1/auth/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get profile of current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Get My Profile
+      tags:
+      - Auth
+    put:
+      consumes:
+      - application/json
+      description: Update profile of current user
+      parameters:
+      - description: name
+        in: body
+        name: profileRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.Profile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Profile
+      tags:
+      - Auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register new user
+      parameters:
+      - description: email
+        in: body
+        name: registerRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      summary: Register
+      tags:
+      - Auth
+  /api/v1/todos:
+    get:
+      consumes:
+      - application/json
+      description: List Todo of current user
+      parameters:
+      - description: Title
+        in: query
+        name: title
+        type: string
+      - description: Description
+        in: query
+        name: description
+        type: string
+      - description: Is Done
+        in: query
+        name: is_done
+        type: boolean
+      - default: 10
+        description: Default 10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Default 10
+        in: query
+        name: page
+        type: integer
+      - description: Sorting
+        enum:
+        - ID asc
+        - ID desc
+        - title asc
+        - title desc
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: List Todo
+      tags:
+      - Todo
+    post:
+      consumes:
+      - application/json
+      description: Create new Todo for current user
+      parameters:
+      - description: title
+        in: body
+        name: todosRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.Todo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Create new Todo
+      tags:
+      - Todo
+  /api/v1/todos/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Todo with ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete Todo
+      tags:
+      - Todo
+    get:
+      consumes:
+      - application/json
+      description: Detail Todo
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Detail Todo
+      tags:
+      - Todo
+    put:
+      consumes:
+      - application/json
+      description: Update Todo
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: title
+        in: body
+        name: todosRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.Todo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Update Todo
+      tags:
+      - Todo
+  /api/v1/todos/{id}/complete:
+    put:
+      consumes:
+      - application/json
+      description: Completed / Uncompleted Todo with ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Completed / Uncompleted Todo
+      tags:
+      - Todo
+  /api/v1/todos/{id}/force:
+    delete:
+      consumes:
+      - application/json
+      description: Force Delete Todo with ID
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Force Delete Todo
+      tags:
+      - Todo
+  /api/v1/users:
+    get:
+      consumes:
+      - application/json
+      description: List User
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        type: integer
+      - description: Name
+        in: query
+        name: name
+        type: string
+      - description: Email
+        in: query
+        name: email
+        type: string
+      - default: 10
+        description: Default 10
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Default 10
+        in: query
+        name: page
+        type: integer
+      - description: Sorting
+        enum:
+        - ID asc
+        - ID desc
+        - name asc
+        - name desc
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: List User
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Create new User
+      parameters:
+      - description: name
+        in: body
+        name: usersRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Create new User
+      tags:
+      - User
+  /api/v1/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete User with ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - User
+    get:
+      consumes:
+      - application/json
+      description: Detail User
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Detail User
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update User
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: name
+        in: body
+        name: usersRequest
+        required: true
+        schema:
+          $ref: '#/definitions/validators_v1.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Update User
+      tags:
+      - User
+  /api/v1/users/{id}/force:
+    delete:
+      consumes:
+      - application/json
+      description: Force Delete User with ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helpers.Success'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Failed'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Force Delete User
+      tags:
+      - User
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
