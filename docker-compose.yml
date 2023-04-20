@@ -5,11 +5,23 @@ services:
     container_name: mysql-todo
     image: "mysql:latest"
     volumes:
-      - "./dbdata:/var/lib/mysql/"
+      - "./mysqldata:/var/lib/mysql/"
     env_file:
       - ./docker/.env
     ports:
       - "${DOCKER_MYSQL_PORT:-3307}:3306"
+    networks:
+      - todo_api_network
+  postgres:
+    platform: linux/amd64
+    container_name: postgres-todo
+    image: postgres:14.1-alpine
+    volumes:
+      - "./postgresdata:/var/lib/postgresql/data"
+    env_file:
+      - ./docker/.env
+    ports:
+      - "${DOCKER_POSTGRES_PORT:-5433}:5432"
     networks:
       - todo_api_network
 
@@ -32,6 +44,7 @@ services:
       - .env
     depends_on:
       - mysql
+      - postgres
       - redis
     restart: on-failure
     volumes:

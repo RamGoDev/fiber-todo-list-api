@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"todo-list/app/models"
 
 	"gorm.io/gorm"
@@ -14,6 +15,7 @@ func UserSeeder() {
 			Email:    "super@todo.id",
 			Password: "password123",
 		})
+		fmt.Println("users table sedder successfully")
 	}
 }
 
@@ -47,6 +49,7 @@ func TodoSeeder() {
 			},
 		}
 		DB.Create(&todos)
+		fmt.Println("todos table sedder successfully")
 	}
 }
 

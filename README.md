@@ -15,7 +15,11 @@ Requirements:
 ## With Docker (Compose)
 - Copy `/.env.example` to `/.env` and set with your own credentials
 - Copy `/docker/.env.example` to `/docker/.env` and set with your own credentials
-- On `/.env` set `APP_HOST=app-todo`, `DATABASE_HOST=mysql-todo` and `REDIS_HOST=redis-todo`
+- On `/.env` set:
+    - `APP_HOST=app-todo`
+    - `DATABASE_HOST=mysql-todo` and `DATABASE_PORT=3306` for `DATABASE_DRIVER=mysql`
+    - `DATABASE_HOST=postgres-todo` and `DATABASE_PORT=5432` for `DATABASE_DRIVER=postgres`
+    - `REDIS_HOST=redis-todo`
 - Run `docker compose up -d --build`
 - Open [http://localhost:3000](http://localhost:3000)
 - Open [http://localhost:3000/api/v1/documentation](http://localhost:3000/api/v1/documentation) for swagger

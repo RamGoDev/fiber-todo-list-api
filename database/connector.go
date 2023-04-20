@@ -12,20 +12,22 @@ var DB *gorm.DB
 
 func Connect() error {
 	var err error
-	driver := configs.GetEnv("DATABASE_DRIVER")
+	dbDriver := configs.GetEnv("DATABASE_DRIVER")
 
-	switch driver {
+	switch dbDriver {
 	case "mysql":
-		err = MysqlConnect()
+		err = NewMysql().Connect()
+	case "postgres":
+		err = NewPostgres().Connect()
 	default:
-		err = fiber.NewError(fiber.StatusInternalServerError, (driver + "'s database driver not available"))
+		err = fiber.NewError(fiber.StatusInternalServerError, (dbDriver + "'s database driver not available"))
 	}
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Connect %s Database Successfully\n", driver)
+	fmt.Printf("Connect %s Database Successfully\n", dbDriver)
 
 	return nil
 }

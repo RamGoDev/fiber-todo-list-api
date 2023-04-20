@@ -4,45 +4,45 @@ import (
 	"fmt"
 	"todo-list/configs"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type Mysql interface {
+type Postgres interface {
 	Config() *gorm.Config
 	Url() string
 	Connect() error
 }
 
-type mysqlImpl struct {
+type postgresImpl struct {
 	//
 }
 
-func NewMysql() Mysql {
-	return &mysqlImpl{}
+func NewPostgres() Mysql {
+	return &postgresImpl{}
 }
 
-func (impl mysqlImpl) Config() *gorm.Config {
+func (impl postgresImpl) Config() *gorm.Config {
 	return &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 		PrepareStmt:                              true,
 	}
 }
 
-func (impl mysqlImpl) Url() string {
+func (impl postgresImpl) Url() string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		configs.GetEnv("DATABASE_HOST"),
 		configs.GetEnv("DATABASE_USERNAME"),
 		configs.GetEnv("DATABASE_PASSWORD"),
-		configs.GetEnv("DATABASE_HOST"),
-		configs.GetEnv("DATABASE_PORT"),
 		configs.GetEnv("DATABASE_NAME"),
+		configs.GetEnv("DATABASE_PORT"),
 	)
 }
 
-func (impl mysqlImpl) Connect() error {
+func (impl postgresImpl) Connect() error {
 	var err error
 	url := impl.Url()
-	DB, err = gorm.Open(mysql.Open(url), impl.Config())
+	DB, err = gorm.Open(postgres.Open(url), impl.Config())
 	return err
 }
