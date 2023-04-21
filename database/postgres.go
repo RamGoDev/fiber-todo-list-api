@@ -8,17 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type Postgres interface {
-	Config() *gorm.Config
-	Url() string
-	Connect() error
-}
-
 type postgresImpl struct {
 	//
 }
 
-func NewPostgres() Mysql {
+func NewPostgres() DBDriver {
 	return &postgresImpl{}
 }
 

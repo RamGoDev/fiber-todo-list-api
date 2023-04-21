@@ -8,17 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-type Mysql interface {
-	Config() *gorm.Config
-	Url() string
-	Connect() error
-}
-
 type mysqlImpl struct {
 	//
 }
 
-func NewMysql() Mysql {
+func NewMysql() DBDriver {
 	return &mysqlImpl{}
 }
 
