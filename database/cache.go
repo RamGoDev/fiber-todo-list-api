@@ -15,7 +15,7 @@ type CacheDriver interface {
 	Get(key string) string
 
 	// Set cache with second duration
-	Set(key string, val string, sec int) bool
+	Set(key string, val string, sec ...int) bool
 }
 
 func CacheConnect() error {
@@ -26,6 +26,8 @@ func CacheConnect() error {
 	switch driver {
 	case "redis":
 		cacheDriver = NewRedis()
+	case "memcache":
+		cacheDriver = NewMemcache()
 	default:
 		err = fiber.NewError(fiber.StatusInternalServerError, (driver + "'s cache driver not available"))
 	}

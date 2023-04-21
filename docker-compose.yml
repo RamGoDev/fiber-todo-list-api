@@ -33,6 +33,14 @@ services:
       - "${DOCKER_REDIS_PORT:-6379}:3306"
     networks:
       - todo_api_network
+  memcache:
+    platform: linux/amd64
+    container_name: memcache-todo
+    image: "memcached:alpine3.17"
+    ports:
+      - "${DOCKER_MEMCACHE_PORT:-11211}:11211"
+    networks:
+      - todo_api_network
 
   app:
     platform: linux/amd64
@@ -46,6 +54,7 @@ services:
       - mysql
       - postgres
       - redis
+      - memcache
     restart: on-failure
     volumes:
       - .:/app

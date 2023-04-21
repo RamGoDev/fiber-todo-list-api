@@ -47,8 +47,6 @@ func (impl redisImpl) Connect() error {
 		return err
 	}
 
-	fmt.Println("Connect Redis Successfully")
-
 	return nil
 }
 
@@ -60,7 +58,11 @@ func (impl redisImpl) Get(key string) string {
 	return val
 }
 
-func (impl redisImpl) Set(key string, val string, sec int) bool {
-	err := Redis.Set(ctx, key, val, time.Duration(sec)*time.Second).Err()
+func (impl redisImpl) Set(key string, val string, sec ...int) bool {
+	second := 0
+	if len(sec) > 0 {
+		second = sec[0]
+	}
+	err := Redis.Set(ctx, key, val, time.Duration(second)*time.Second).Err()
 	return err == nil
 }
