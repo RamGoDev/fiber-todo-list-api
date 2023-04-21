@@ -39,10 +39,10 @@ func main() {
 		panic("Failed to connect Database (" + errDb.Error() + ")")
 	}
 
-	// Connect Redis for Caching
-	errCache := database.RedisConnect()
+	// Connect Cache Client
+	errCache := database.CacheConnect()
 	if errCache != nil {
-		panic("Failed to connect Redis (" + errCache.Error() + ")")
+		panic("Failed to connect Cache Client (" + errCache.Error() + ")")
 	}
 
 	// Migrate

@@ -13,7 +13,15 @@ import (
 var ctx = context.Background()
 var Redis *redis.Client
 
-func GetRedisAddress() string {
+type redisImpl struct {
+	//
+}
+
+func NewRedis() CacheDriver {
+	return &redisImpl{}
+}
+
+func (impl redisImpl) Address() string {
 	return fmt.Sprintf(
 		"%s:%s",
 		configs.GetEnv("REDIS_HOST"),
@@ -21,18 +29,17 @@ func GetRedisAddress() string {
 	)
 }
 
-func RedisOptions() *redis.Options {
+func (impl redisImpl) Options() *redis.Options {
 	redisDb, _ := strconv.Atoi(configs.GetEnv("REDIS_DB"))
 	return &redis.Options{
-		Addr:     GetRedisAddress(),
+		Addr:     impl.Address(),
 		Password: configs.GetEnv("REDIS_PASSWORD"),
 		DB:       redisDb,
 	}
 }
 
-// Connect to redis client
-func RedisConnect() error {
-	Redis = redis.NewClient(RedisOptions())
+func (impl redisImpl) Connect() error {
+	Redis = redis.NewClient(impl.Options())
 
 	// Test set value
 	err := Redis.Set(ctx, "test_todo", "init value", 0).Err()
@@ -45,11 +52,7 @@ func RedisConnect() error {
 	return nil
 }
 
-// Get cache value with key
-//
-// param	key	string
-// return	string
-func RedisGet(key string) string {
+func (impl redisImpl) Get(key string) string {
 	val, err := Redis.Get(ctx, key).Result()
 	if err == redis.Nil {
 		return ""
@@ -57,13 +60,7 @@ func RedisGet(key string) string {
 	return val
 }
 
-// Set cache with second duration
-//
-// param	key	string
-// param	value	string
-// param	sec	int
-// return	string
-func RedisSet(key string, val string, sec int) bool {
+func (impl redisImpl) Set(key string, val string, sec int) bool {
 	err := Redis.Set(ctx, key, val, time.Duration(sec)*time.Second).Err()
 	return err == nil
 }
