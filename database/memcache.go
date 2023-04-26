@@ -49,3 +49,8 @@ func (impl memcacheImpl) Set(key string, val string, sec ...int) bool {
 	err := Memcache.Set(&memcache.Item{Key: key, Value: []byte(val)})
 	return err == nil
 }
+
+func (impl memcacheImpl) Clear(pattern string) error {
+	// TODO: add flush cache with pattern
+	return nil
+}

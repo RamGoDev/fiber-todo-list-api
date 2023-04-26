@@ -1,7 +1,9 @@
 package repositories_v1
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	filters_v1 "todo-list/app/filters/v1"
 	"todo-list/app/models"
 	queries_v1 "todo-list/app/queries/v1"
@@ -24,11 +26,11 @@ type Todo interface {
 }
 
 type todoImpl struct {
-	//
+	cache database.CacheDriver
 }
 
-func NewTodo() Todo {
-	return &todoImpl{}
+func NewTodo(cache database.CacheDriver) Todo {
+	return &todoImpl{cache}
 }
 
 func IsExistsTodo(query *gorm.DB, todo *models.Todo) (*models.Todo, string) {
@@ -47,7 +49,19 @@ func IsExistsTodo(query *gorm.DB, todo *models.Todo) (*models.Todo, string) {
 
 func (impl todoImpl) List(filter map[string]interface{}, pagination helpers.Pagination) *helpers.Pagination {
 	var todos []models.Todo
+	var todo models.Todo
 	db := database.DB
+
+	queryString := helpers.ConvertToQueryString(filter)
+	cacheKey := fmt.Sprintf("%s_%s", todo.CacheBaseKey(), queryString)
+
+	// Checking the cache
+	cache := impl.cache.Get(cacheKey)
+	if cache != "" {
+		json.Unmarshal([]byte(cache), &pagination)
+		fmt.Println("resp from the cache")
+		return &pagination
+	}
 
 	db = filters_v1.ByUserId(filter, db)
 	db = filters_v1.ByTitle(filter, db)
@@ -56,14 +70,16 @@ func (impl todoImpl) List(filter map[string]interface{}, pagination helpers.Pagi
 
 	db.Scopes(helpers.Paginate(todos, &pagination, db)).Find(&todos)
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := []responses_v1.Todo{}
 	for _, v := range todos {
 		data := responses_v1.TodoMapToResponse(&v)
 		resp = append(resp, *data)
 	}
 	pagination.Rows = resp
+
+	// Set the cache
+	respString, _ := json.Marshal(pagination)
+	impl.cache.Set(cacheKey, string(respString))
 
 	return &pagination
 }
@@ -73,6 +89,17 @@ func (impl todoImpl) Show(c *fiber.Ctx, id string) (*responses_v1.Todo, error) {
 	var todo models.Todo
 
 	userId := helpers.GetCurrentUserId(c)
+
+	// Checking the cache
+	cacheKey := todo.CacheShowKey(userId, id)
+	cache := impl.cache.Get(cacheKey)
+	if cache != "" {
+		resp := responses_v1.TodoMapToResponse(&todo)
+		json.Unmarshal([]byte(cache), resp)
+		fmt.Println("resp from the cache")
+		return resp, nil
+	}
+
 	db = queries_v1.ByUserId(userId, db)
 	db = queries_v1.ById(id, db)
 
@@ -81,9 +108,11 @@ func (impl todoImpl) Show(c *fiber.Ctx, id string) (*responses_v1.Todo, error) {
 		return nil, errors.New(message)
 	}
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := responses_v1.TodoMapToResponse(&todo)
+
+	// Set the cache
+	respString, _ := json.Marshal(resp)
+	impl.cache.Set(cacheKey, string(respString))
 
 	return resp, nil
 }
@@ -114,9 +143,11 @@ func (impl todoImpl) Store(c *fiber.Ctx) (*responses_v1.Todo, error) {
 		return nil, err
 	}
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := responses_v1.TodoMapToResponse(&todo)
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return resp, err
 }
@@ -142,9 +173,11 @@ func (impl todoImpl) Update(c *fiber.Ctx, id string) (*responses_v1.Todo, error)
 
 	db.Model(&todo).Where("id = ?", id).UpdateColumns(&todo)
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := responses_v1.TodoMapToResponse(&todo)
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return resp, err
 }
@@ -166,6 +199,10 @@ func (impl todoImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.Todo, error
 	if err != nil {
 		return nil, err
 	}
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return nil, err
 }
@@ -189,6 +226,10 @@ func (impl todoImpl) ForceDestroy(c *fiber.Ctx, id string) (*responses_v1.Todo, 
 	if err != nil {
 		return nil, err
 	}
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return nil, err
 }
@@ -216,9 +257,11 @@ func (impl todoImpl) Complete(c *fiber.Ctx, id string) (*responses_v1.Todo, stri
 	db.Model(&todo).Update("is_done", status)
 	msgStatus = msgStatus + " is successfully"
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := responses_v1.TodoMapToResponse(&todo)
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return resp, msgStatus, nil
 }

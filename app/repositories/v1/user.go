@@ -1,7 +1,9 @@
 package repositories_v1
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	filters_v1 "todo-list/app/filters/v1"
 	"todo-list/app/models"
 	queries_v1 "todo-list/app/queries/v1"
@@ -23,11 +25,11 @@ type User interface {
 }
 
 type userImpl struct {
-	//
+	cache database.CacheDriver
 }
 
-func NewUser() User {
-	return &userImpl{}
+func NewUser(cache database.CacheDriver) User {
+	return &userImpl{cache}
 }
 
 func IsExistsUser(query *gorm.DB, user *models.User) (*models.User, string) {
@@ -45,8 +47,20 @@ func IsExistsUser(query *gorm.DB, user *models.User) (*models.User, string) {
 }
 
 func (impl userImpl) List(filter map[string]interface{}, pagination helpers.Pagination) *helpers.Pagination {
-	db := database.DB
 	var users []models.User
+	var user models.User
+	db := database.DB
+
+	queryString := helpers.ConvertToQueryString(filter)
+	cacheKey := fmt.Sprintf("%s_%s", user.CacheBaseKey(), queryString)
+
+	// Checking the cache
+	cache := impl.cache.Get(cacheKey)
+	if cache != "" {
+		json.Unmarshal([]byte(cache), &pagination)
+		fmt.Println("resp from the cache")
+		return &pagination
+	}
 
 	db = filters_v1.ByName(filter, db)
 	db = filters_v1.ByEmail(filter, db)
@@ -54,8 +68,6 @@ func (impl userImpl) List(filter map[string]interface{}, pagination helpers.Pagi
 
 	db.Scopes(helpers.Paginate(users, &pagination, db)).Find(&users)
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := []responses_v1.User{}
 	for _, v := range users {
 		data := responses_v1.UserMapToResponse(&v)
@@ -63,12 +75,26 @@ func (impl userImpl) List(filter map[string]interface{}, pagination helpers.Pagi
 	}
 	pagination.Rows = resp
 
+	// Set the cache
+	respString, _ := json.Marshal(pagination)
+	impl.cache.Set(cacheKey, string(respString))
+
 	return &pagination
 }
 
 func (impl userImpl) Show(id string) (*responses_v1.User, error) {
 	db := database.DB
 	var user models.User
+
+	// Checking the cache
+	cacheKey := user.CacheShowKey(id)
+	cache := impl.cache.Get(cacheKey)
+	if cache != "" {
+		resp := responses_v1.UserMapToResponse(&user)
+		json.Unmarshal([]byte(cache), resp)
+		fmt.Println("resp from the cache")
+		return resp, nil
+	}
 
 	db = queries_v1.ById(id, db)
 
@@ -78,6 +104,10 @@ func (impl userImpl) Show(id string) (*responses_v1.User, error) {
 	}
 
 	resp := responses_v1.UserMapToResponse(&user)
+
+	// Set the cache
+	respString, _ := json.Marshal(resp)
+	impl.cache.Set(cacheKey, string(respString))
 
 	return resp, nil
 }
@@ -95,6 +125,10 @@ func (impl userImpl) Store(c *fiber.Ctx) (*responses_v1.User, error) {
 	err = db.Create(&user).Error
 
 	resp := responses_v1.UserMapToResponse(&user)
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return resp, err
 }
@@ -120,6 +154,10 @@ func (impl userImpl) Update(c *fiber.Ctx, id string) (*responses_v1.User, error)
 
 	resp := responses_v1.UserMapToResponse(&user)
 
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
+
 	return resp, err
 }
 
@@ -138,6 +176,10 @@ func (impl userImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.User, error
 	if err != nil {
 		return nil, err
 	}
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return nil, err
 }
@@ -158,6 +200,10 @@ func (impl userImpl) ForceDestroy(c *fiber.Ctx, id string) (*responses_v1.User, 
 	if err != nil {
 		return nil, err
 	}
+
+	// Clear cache
+	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
+	impl.cache.Clear(cachePattern)
 
 	return nil, err
 }

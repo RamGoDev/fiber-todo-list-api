@@ -16,9 +16,12 @@ type CacheDriver interface {
 
 	// Set cache with second duration
 	Set(key string, val string, sec ...int) bool
+
+	// Clear cache with pattern
+	Clear(pattern string) error
 }
 
-func CacheConnect() error {
+func GetCacheDriver() (CacheDriver, string, error) {
 	var err error
 	var cacheDriver CacheDriver
 	driver := configs.GetEnv("CACHE_DRIVER")
@@ -31,6 +34,16 @@ func CacheConnect() error {
 	default:
 		err = fiber.NewError(fiber.StatusInternalServerError, (driver + "'s cache driver not available"))
 	}
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return cacheDriver, driver, nil
+}
+
+func CacheConnect() error {
+	cacheDriver, driver, err := GetCacheDriver()
 
 	if err != nil {
 		return err
