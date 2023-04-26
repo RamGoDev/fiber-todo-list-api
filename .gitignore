@@ -3,3 +3,8 @@ docker/.env
 main
 mysqldata
 postgresdata
+elasticdata
+certs
+esdata01
+esdata02
+esdata03

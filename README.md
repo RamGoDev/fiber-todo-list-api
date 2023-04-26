@@ -21,6 +21,7 @@ Requirements:
     - `DATABASE_HOST=postgres-todo` and `DATABASE_PORT=5432` for `DATABASE_DRIVER=postgres`
     - `REDIS_HOST=redis-todo` for `CACHE_DRIVER=redis`
     - `MEMCACHE_HOST=memcache-todo` for `CACHE_DRIVER=memcache`
+    - `ELASTICSEARCH_HOST="http://es01-todo"`
 - Run `docker compose up -d --build`
 - Open [http://localhost:3000](http://localhost:3000)
 - Open [http://localhost:3000/api/v1/documentation](http://localhost:3000/api/v1/documentation) for swagger

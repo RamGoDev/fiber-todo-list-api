@@ -45,6 +45,12 @@ func main() {
 		panic("Failed to connect Cache Client (" + errCache.Error() + ")")
 	}
 
+	// Connect Elasticsearh Client
+	errElastic := database.ElasticConnect()
+	if errElastic != nil {
+		panic("Failed to connect Elasticsearch Client (" + errElastic.Error() + ")")
+	}
+
 	// Migrate
 	errMigrate := database.Migrate()
 	if errMigrate != nil {

@@ -37,7 +37,11 @@ func CacheConnect() error {
 	}
 
 	// Connect to cache client
-	cacheDriver.Connect()
+	err = cacheDriver.Connect()
+
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("Connect %s's Cache Driver Successfully\n", driver)
 

@@ -35,7 +35,11 @@ func Connect() error {
 	}
 
 	// Connect to database
-	dbDriver.Connect()
+	err = dbDriver.Connect()
+
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("Connect %s Database Successfully\n", driver)
 
