@@ -24,6 +24,10 @@ func UserSeeder() {
 
 		// Store to elasticsearch
 		elastic := NewElasticsearch()
+
+		// Delete index for reset
+		elastic.DeleteIndex([]string{userIndex.IndexName()})
+
 		_, _ = helpers.ConvertToOtherStruct(user, &userIndex)
 		dataByte, _ := json.Marshal(userIndex)
 		elastic.AddDocument(userIndex.IndexName(), dataByte)
@@ -67,6 +71,10 @@ func TodoSeeder() {
 
 		// Store to elasticsearch
 		elastic := NewElasticsearch()
+
+		// Delete index for reset
+		elastic.DeleteIndex([]string{todoIndex.IndexName()})
+
 		var dataByte []byte
 		for _, todo := range todos {
 			_, _ = helpers.ConvertToOtherStruct(todo, &todoIndex)

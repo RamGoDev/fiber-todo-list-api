@@ -26,6 +26,9 @@ type Elasticsearch interface {
 	// Create Index
 	CreateIndex(indexName string) error
 
+	// Delete Index
+	DeleteIndex(indexName []string) error
+
 	// Add document
 	AddDocument(indexName string, data []byte) error
 
@@ -90,6 +93,22 @@ func (impl elasticsearchImpl) InitAllIndex() error {
 
 func (impl elasticsearchImpl) CreateIndex(indexName string) error {
 	_, err := Elastic.Indices.Create(indexName)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (impl elasticsearchImpl) DeleteIndex(indexName []string) error {
+	// Set up the request object.
+	req := esapi.IndicesDeleteRequest{
+		Index: indexName,
+	}
+
+	// Perform the request with the client.
+	_, err := req.Do(ctx, Elastic)
 
 	if err != nil {
 		return err
