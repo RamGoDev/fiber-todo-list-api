@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/bradfitz/gomemcache v0.0.0-20230124162541-5f7a7d875746
+	github.com/elastic/go-elasticsearch/v8 v8.7.0
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/gofiber/fiber/v2 v2.43.0
 	github.com/gofiber/swagger v0.1.10
@@ -23,7 +24,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.2.0 // indirect
-	github.com/elastic/go-elasticsearch/v8 v8.7.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.8 // indirect

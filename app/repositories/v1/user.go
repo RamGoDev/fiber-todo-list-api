@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	filters_v1 "todo-list/app/filters/v1"
+	"todo-list/app/indices"
 	"todo-list/app/models"
 	queries_v1 "todo-list/app/queries/v1"
 	responses_v1 "todo-list/app/responses/v1"
@@ -25,11 +26,13 @@ type User interface {
 }
 
 type userImpl struct {
-	cache database.CacheDriver
+	cache   database.CacheDriver
+	elastic database.Elasticsearch
 }
 
-func NewUser(cache database.CacheDriver) User {
-	return &userImpl{cache}
+func NewUser(cache database.CacheDriver,
+	elastic database.Elasticsearch) User {
+	return &userImpl{cache, elastic}
 }
 
 func IsExistsUser(query *gorm.DB, user *models.User) (*models.User, string) {
@@ -113,8 +116,10 @@ func (impl userImpl) Show(id string) (*responses_v1.User, error) {
 }
 
 func (impl userImpl) Store(c *fiber.Ctx) (*responses_v1.User, error) {
-	db := database.DB
 	var user models.User
+	var userIndex *indices.User
+
+	db := database.DB
 
 	err := c.BodyParser(&user)
 
@@ -124,18 +129,32 @@ func (impl userImpl) Store(c *fiber.Ctx) (*responses_v1.User, error) {
 
 	err = db.Create(&user).Error
 
+	if err != nil {
+		return nil, err
+	}
+
 	resp := responses_v1.UserMapToResponse(&user)
 
 	// Clear cache
 	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Store to elasticsearch
+	_, _ = helpers.ConvertToOtherStruct(user, &userIndex)
+	dataByte, _ := json.Marshal(userIndex)
+	err = impl.elastic.AddDocument(userIndex.IndexName(), dataByte)
+	if err != nil {
+		return nil, err
+	}
+
 	return resp, err
 }
 
 func (impl userImpl) Update(c *fiber.Ctx, id string) (*responses_v1.User, error) {
-	db := database.DB
 	var user models.User
+	var userIndex *indices.User
+
+	db := database.DB
 
 	db = queries_v1.ById(id, db)
 
@@ -158,12 +177,22 @@ func (impl userImpl) Update(c *fiber.Ctx, id string) (*responses_v1.User, error)
 	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Update document on elasticsearch
+	_, _ = helpers.ConvertToOtherStruct(user, &userIndex)
+	dataByte, _ := json.Marshal(userIndex)
+	err = impl.elastic.UpdateDocument(userIndex.IndexName(), id, dataByte)
+	if err != nil {
+		return nil, err
+	}
+
 	return resp, err
 }
 
 func (impl userImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.User, error) {
-	db := database.DB
 	var user models.User
+	var userIndex *indices.User
+
+	db := database.DB
 
 	db = queries_v1.ById(id, db)
 
@@ -181,12 +210,19 @@ func (impl userImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.User, error
 	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Delete document on elasticsearch
+	err = impl.elastic.DeleteDocument(userIndex.IndexName(), id)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, err
 }
 
 func (impl userImpl) ForceDestroy(c *fiber.Ctx, id string) (*responses_v1.User, error) {
 	db := database.DB
 	var user models.User
+	var userIndex *indices.User
 
 	db = queries_v1.ById(id, db)
 	db = db.Unscoped()
@@ -204,6 +240,12 @@ func (impl userImpl) ForceDestroy(c *fiber.Ctx, id string) (*responses_v1.User, 
 	// Clear cache
 	cachePattern := fmt.Sprintf("*%s*", user.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
+
+	// Delete document on elasticsearch
+	err = impl.elastic.DeleteDocument(userIndex.IndexName(), id)
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, err
 }

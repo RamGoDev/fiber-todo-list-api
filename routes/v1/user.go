@@ -14,7 +14,8 @@ func UserRoutes(router fiber.Router) {
 	route := router.Group("/users").Name(".users")
 	response := helpers.NewResponse()
 	cache, _, _ := database.GetCacheDriver()
-	repository := repositories_v1.NewUser(cache)
+	elastic := database.NewElasticsearch()
+	repository := repositories_v1.NewUser(cache, elastic)
 	controller := controllers_v1.NewUser(response, repository, cache)
 
 	route.Get("/", middlewares.IsAuthenticated, middlewares.IsSuper, controller.Index).Name(".index")

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	filters_v1 "todo-list/app/filters/v1"
+	"todo-list/app/indices"
 	"todo-list/app/models"
 	queries_v1 "todo-list/app/queries/v1"
 	responses_v1 "todo-list/app/responses/v1"
@@ -26,11 +27,13 @@ type Todo interface {
 }
 
 type todoImpl struct {
-	cache database.CacheDriver
+	cache   database.CacheDriver
+	elastic database.Elasticsearch
 }
 
-func NewTodo(cache database.CacheDriver) Todo {
-	return &todoImpl{cache}
+func NewTodo(cache database.CacheDriver,
+	elastic database.Elasticsearch) Todo {
+	return &todoImpl{cache, elastic}
 }
 
 func IsExistsTodo(query *gorm.DB, todo *models.Todo) (*models.Todo, string) {
@@ -120,6 +123,8 @@ func (impl todoImpl) Show(c *fiber.Ctx, id string) (*responses_v1.Todo, error) {
 func (impl todoImpl) Store(c *fiber.Ctx) (*responses_v1.Todo, error) {
 	var user models.User
 	var todo models.Todo
+	var todoIndex *indices.Todo
+
 	db := database.DB
 	userId := helpers.GetCurrentUserId(c)
 
@@ -149,12 +154,22 @@ func (impl todoImpl) Store(c *fiber.Ctx) (*responses_v1.Todo, error) {
 	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Store to elasticsearch
+	_, _ = helpers.ConvertToOtherStruct(todo, &todoIndex)
+	dataByte, _ := json.Marshal(todoIndex)
+	err = impl.elastic.AddDocument(todoIndex.IndexName(), dataByte)
+	if err != nil {
+		return nil, err
+	}
+
 	return resp, err
 }
 
 func (impl todoImpl) Update(c *fiber.Ctx, id string) (*responses_v1.Todo, error) {
-	db := database.DB
 	var todo models.Todo
+	var todoIndex *indices.Todo
+
+	db := database.DB
 
 	userId := helpers.GetCurrentUserId(c)
 	db = queries_v1.ByUserId(userId, db)
@@ -179,12 +194,22 @@ func (impl todoImpl) Update(c *fiber.Ctx, id string) (*responses_v1.Todo, error)
 	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Update document on elasticsearch
+	_, _ = helpers.ConvertToOtherStruct(todo, &todoIndex)
+	dataByte, _ := json.Marshal(todoIndex)
+	err = impl.elastic.UpdateDocument(todoIndex.IndexName(), id, dataByte)
+	if err != nil {
+		return nil, err
+	}
+
 	return resp, err
 }
 
 func (impl todoImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.Todo, error) {
-	db := database.DB
 	var todo models.Todo
+	var todoIndex *indices.Todo
+
+	db := database.DB
 
 	userId := helpers.GetCurrentUserId(c)
 	db = queries_v1.ByUserId(userId, db)
@@ -204,12 +229,20 @@ func (impl todoImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.Todo, error
 	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Delete document on elasticsearch
+	err = impl.elastic.DeleteDocument(todoIndex.IndexName(), id)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, err
 }
 
 func (impl todoImpl) ForceDestroy(c *fiber.Ctx, id string) (*responses_v1.Todo, error) {
-	db := database.DB
 	var todo models.Todo
+	var todoIndex *indices.Todo
+
+	db := database.DB
 
 	// .Unscoped(): find with soft delete data
 	userId := helpers.GetCurrentUserId(c)
@@ -231,12 +264,21 @@ func (impl todoImpl) ForceDestroy(c *fiber.Ctx, id string) (*responses_v1.Todo, 
 	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
 
+	// Delete document on elasticsearch
+	err = impl.elastic.DeleteDocument(todoIndex.IndexName(), id)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, err
 }
 
 func (impl todoImpl) Complete(c *fiber.Ctx, id string) (*responses_v1.Todo, string, error) {
-	db := database.DB
+	var err error
 	var todo models.Todo
+	var todoIndex *indices.Todo
+
+	db := database.DB
 
 	userId := helpers.GetCurrentUserId(c)
 	db = queries_v1.ByUserId(userId, db)
@@ -262,6 +304,14 @@ func (impl todoImpl) Complete(c *fiber.Ctx, id string) (*responses_v1.Todo, stri
 	// Clear cache
 	cachePattern := fmt.Sprintf("*%s*", todo.CacheBaseKey())
 	impl.cache.Clear(cachePattern)
+
+	// Update document on elasticsearch
+	_, _ = helpers.ConvertToOtherStruct(todo, &todoIndex)
+	dataByte, _ := json.Marshal(todoIndex)
+	err = impl.elastic.UpdateDocument(todoIndex.IndexName(), id, dataByte)
+	if err != nil {
+		return nil, "", err
+	}
 
 	return resp, msgStatus, nil
 }

@@ -15,7 +15,8 @@ func TodoRoutes(router fiber.Router) {
 	route := router.Group("/todos").Name(".todos")
 	response := helpers.NewResponse()
 	cache, _, _ := database.GetCacheDriver()
-	repository := repositories_v1.NewTodo(cache)
+	elastic := database.NewElasticsearch()
+	repository := repositories_v1.NewTodo(cache, elastic)
 	controller := controllers_v1.NewTodo(response, repository, cache)
 
 	route.Get("/", middlewares.IsAuthenticated, controller.Index).Name(".index")

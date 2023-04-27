@@ -3,6 +3,7 @@ package repositories_v1
 import (
 	"encoding/json"
 	"errors"
+	"todo-list/app/indices"
 	"todo-list/app/models"
 	responses_v1 "todo-list/app/responses/v1"
 	validators_v1 "todo-list/app/validators/v1"
@@ -18,11 +19,11 @@ type Auth interface {
 }
 
 type authImpl struct {
-	//
+	elastic database.Elasticsearch
 }
 
-func NewAuth() Auth {
-	return &authImpl{}
+func NewAuth(elastic database.Elasticsearch) Auth {
+	return &authImpl{elastic}
 }
 
 func (impl authImpl) Login(c *fiber.Ctx) (*responses_v1.Login, error) {
@@ -64,6 +65,7 @@ func (impl authImpl) Register(c *fiber.Ctx) (*responses_v1.User, error) {
 	var err error
 	var user models.User
 	var structure validators_v1.Register
+	var userIndex *indices.User
 
 	err = json.Unmarshal(c.Body(), &structure)
 
@@ -80,6 +82,14 @@ func (impl authImpl) Register(c *fiber.Ctx) (*responses_v1.User, error) {
 
 	err = db.Create(&user).Error
 
+	if err != nil {
+		return nil, err
+	}
+
+	// Store to elasticsearch
+	_, _ = helpers.ConvertToOtherStruct(user, &userIndex)
+	dataByte, _ := json.Marshal(userIndex)
+	err = impl.elastic.AddDocument(userIndex.IndexName(), dataByte)
 	if err != nil {
 		return nil, err
 	}
