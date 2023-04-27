@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 )
 
@@ -16,4 +18,12 @@ type Todo struct {
 
 func (u *Todo) TableName() string {
 	return "todos"
+}
+
+func (u *Todo) CacheBaseKey() string {
+	return u.TableName()
+}
+
+func (u *Todo) CacheShowKey(userId string, id string) string {
+	return fmt.Sprintf("%s_%s_%s", userId, u.CacheBaseKey(), id)
 }

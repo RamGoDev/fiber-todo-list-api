@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -15,6 +17,14 @@ type User struct {
 
 func (u *User) TableName() string {
 	return "users"
+}
+
+func (u *User) CacheBaseKey() string {
+	return u.TableName()
+}
+
+func (u *User) CacheShowKey(id string) string {
+	return fmt.Sprintf("%s_%s", u.CacheBaseKey(), id)
 }
 
 func hashPassword(password string) (string, error) {

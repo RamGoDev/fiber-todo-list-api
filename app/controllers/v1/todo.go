@@ -3,6 +3,7 @@ package controllers_v1
 import (
 	"strconv"
 	repositories_v1 "todo-list/app/repositories/v1"
+	"todo-list/database"
 	"todo-list/helpers"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,12 +22,14 @@ type Todo interface {
 type todoImpl struct {
 	response   helpers.Response
 	repository repositories_v1.Todo
+	cache      database.CacheDriver
 }
 
 func NewTodo(
 	response helpers.Response,
-	repository repositories_v1.Todo) Todo {
-	return &todoImpl{response, repository}
+	repository repositories_v1.Todo,
+	cache database.CacheDriver) Todo {
+	return &todoImpl{response, repository, cache}
 }
 
 // @Security 		BearerAuth

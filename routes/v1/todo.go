@@ -5,6 +5,7 @@ import (
 	"todo-list/app/middlewares"
 	repositories_v1 "todo-list/app/repositories/v1"
 	validators_v1 "todo-list/app/validators/v1"
+	"todo-list/database"
 	"todo-list/helpers"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,8 +14,9 @@ import (
 func TodoRoutes(router fiber.Router) {
 	route := router.Group("/todos").Name(".todos")
 	response := helpers.NewResponse()
-	repository := repositories_v1.NewTodo()
-	controller := controllers_v1.NewTodo(response, repository)
+	cache, _, _ := database.GetCacheDriver()
+	repository := repositories_v1.NewTodo(cache)
+	controller := controllers_v1.NewTodo(response, repository, cache)
 
 	route.Get("/", middlewares.IsAuthenticated, controller.Index).Name(".index")
 	route.Post("/", middlewares.IsAuthenticated, validators_v1.TodoValidator, controller.Store).Name(".store")

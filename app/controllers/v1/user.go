@@ -3,6 +3,7 @@ package controllers_v1
 import (
 	"strconv"
 	repositories_v1 "todo-list/app/repositories/v1"
+	"todo-list/database"
 	"todo-list/helpers"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,12 +21,14 @@ type User interface {
 type userImpl struct {
 	response   helpers.Response
 	repository repositories_v1.User
+	cache      database.CacheDriver
 }
 
 func NewUser(
 	response helpers.Response,
-	repository repositories_v1.User) User {
-	return &userImpl{response, repository}
+	repository repositories_v1.User,
+	cache database.CacheDriver) User {
+	return &userImpl{response, repository, cache}
 }
 
 // @Security 		BearerAuth

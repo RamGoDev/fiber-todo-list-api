@@ -39,7 +39,7 @@ func (impl memcacheImpl) Connect() error {
 
 func (impl memcacheImpl) Get(key string) string {
 	item, err := Memcache.Get(key)
-	if err == nil {
+	if err != nil {
 		return ""
 	}
 	return string(item.Value)
@@ -48,4 +48,13 @@ func (impl memcacheImpl) Get(key string) string {
 func (impl memcacheImpl) Set(key string, val string, sec ...int) bool {
 	err := Memcache.Set(&memcache.Item{Key: key, Value: []byte(val)})
 	return err == nil
+}
+
+func (impl memcacheImpl) Clear(pattern string) error {
+	// TODO: add flush cache with pattern
+	err := Memcache.FlushAll()
+	if err != nil {
+		return err
+	}
+	return nil
 }
