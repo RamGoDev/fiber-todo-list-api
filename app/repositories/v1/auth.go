@@ -54,8 +54,6 @@ func (impl authImpl) Login(c *fiber.Ctx) (*responses_v1.Login, error) {
 		return nil, errResp
 	}
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	userResp := responses_v1.UserMapToResponse(user)
 	resp := responses_v1.LoginMapToResponse(userResp, jwt)
 
@@ -86,8 +84,6 @@ func (impl authImpl) Register(c *fiber.Ctx) (*responses_v1.User, error) {
 		return nil, err
 	}
 
-	// TODO: simplify mapping/parse response
-	// Mapping response
 	resp := responses_v1.RegisterMapToResponse(&user)
 
 	return resp, nil

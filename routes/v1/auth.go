@@ -5,6 +5,7 @@ import (
 	"todo-list/app/middlewares"
 	repositories_v1 "todo-list/app/repositories/v1"
 	validators_v1 "todo-list/app/validators/v1"
+	"todo-list/database"
 	"todo-list/helpers"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,8 +14,9 @@ import (
 func AuthRoutes(router fiber.Router) {
 	route := router.Group("/auth").Name(".auth")
 	response := helpers.NewResponse()
+	cache, _, _ := database.GetCacheDriver()
 	repository := repositories_v1.NewAuth()
-	userRepository := repositories_v1.NewUser()
+	userRepository := repositories_v1.NewUser(cache)
 	controller := controllers_v1.NewAuth(response, repository, userRepository)
 
 	route.Post("/login", validators_v1.LoginValidator, controller.Login).Name(".login")
