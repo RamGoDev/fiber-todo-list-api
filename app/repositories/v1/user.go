@@ -116,8 +116,10 @@ func (impl userImpl) Show(id string) (*responses_v1.User, error) {
 }
 
 func (impl userImpl) Store(c *fiber.Ctx) (*responses_v1.User, error) {
-	db := database.DB
 	var user models.User
+	var userIndex *indices.User
+
+	db := database.DB
 
 	err := c.BodyParser(&user)
 
@@ -138,7 +140,6 @@ func (impl userImpl) Store(c *fiber.Ctx) (*responses_v1.User, error) {
 	impl.cache.Clear(cachePattern)
 
 	// Store to elasticsearch
-	var userIndex *indices.User
 	_, _ = helpers.ConvertToOtherStruct(user, &userIndex)
 	dataByte, _ := json.Marshal(userIndex)
 	err = impl.elastic.AddDocument(userIndex.IndexName(), dataByte)
@@ -150,9 +151,10 @@ func (impl userImpl) Store(c *fiber.Ctx) (*responses_v1.User, error) {
 }
 
 func (impl userImpl) Update(c *fiber.Ctx, id string) (*responses_v1.User, error) {
-	db := database.DB
 	var user models.User
 	var userIndex *indices.User
+
+	db := database.DB
 
 	db = queries_v1.ById(id, db)
 
@@ -187,9 +189,10 @@ func (impl userImpl) Update(c *fiber.Ctx, id string) (*responses_v1.User, error)
 }
 
 func (impl userImpl) Destroy(c *fiber.Ctx, id string) (*responses_v1.User, error) {
-	db := database.DB
 	var user models.User
 	var userIndex *indices.User
+
+	db := database.DB
 
 	db = queries_v1.ById(id, db)
 
