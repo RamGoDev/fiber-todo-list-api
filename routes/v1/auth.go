@@ -15,8 +15,9 @@ func AuthRoutes(router fiber.Router) {
 	route := router.Group("/auth").Name(".auth")
 	response := helpers.NewResponse()
 	cache, _, _ := database.GetCacheDriver()
-	repository := repositories_v1.NewAuth()
-	userRepository := repositories_v1.NewUser(cache)
+	elastic := database.NewElasticsearch()
+	repository := repositories_v1.NewAuth(elastic)
+	userRepository := repositories_v1.NewUser(cache, elastic)
 	controller := controllers_v1.NewAuth(response, repository, userRepository)
 
 	route.Post("/login", validators_v1.LoginValidator, controller.Login).Name(".login")

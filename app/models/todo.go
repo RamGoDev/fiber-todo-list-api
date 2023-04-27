@@ -2,8 +2,6 @@ package models
 
 import (
 	"fmt"
-
-	"gorm.io/gorm"
 )
 
 type Todo struct {
@@ -13,7 +11,7 @@ type Todo struct {
 	Description string `gorm:"size:150;not null" json:"description"`
 	IsDone      bool   `json:"is_done"`
 	User        User   `gorm:"foreignKey:UserId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	gorm.Model
+	BaseModel
 }
 
 func (u *Todo) TableName() string {

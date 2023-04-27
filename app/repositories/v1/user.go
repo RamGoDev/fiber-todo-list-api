@@ -25,11 +25,13 @@ type User interface {
 }
 
 type userImpl struct {
-	cache database.CacheDriver
+	cache   database.CacheDriver
+	elastic database.Elasticsearch
 }
 
-func NewUser(cache database.CacheDriver) User {
-	return &userImpl{cache}
+func NewUser(cache database.CacheDriver,
+	elastic database.Elasticsearch) User {
+	return &userImpl{cache, elastic}
 }
 
 func IsExistsUser(query *gorm.DB, user *models.User) (*models.User, string) {
