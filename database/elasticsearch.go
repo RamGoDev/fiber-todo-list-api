@@ -114,14 +114,39 @@ func (impl elasticsearchImpl) AddDocument(indexName string, data []byte) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (impl elasticsearchImpl) UpdateDocument(indexName string, id string, data []byte) error {
+	// Delete old document
+	errDeleted := impl.DeleteDocument(indexName, id)
+	if errDeleted != nil {
+		return errDeleted
+	}
+
+	// Create or Replace with new document
+	errCreated := impl.AddDocument(indexName, data)
+	if errCreated != nil {
+		return errCreated
+	}
+
 	return nil
 }
 
 func (impl elasticsearchImpl) DeleteDocument(indexName string, id string) error {
+	// Set up the request object.
+	req := esapi.DeleteRequest{
+		Index:      indexName,
+		DocumentID: id,
+	}
+
+	// Perform the request with the client.
+	_, err := req.Do(ctx, Elastic)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

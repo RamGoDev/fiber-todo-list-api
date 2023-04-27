@@ -65,6 +65,7 @@ func (impl authImpl) Register(c *fiber.Ctx) (*responses_v1.User, error) {
 	var err error
 	var user models.User
 	var structure validators_v1.Register
+	var userIndex *indices.User
 
 	err = json.Unmarshal(c.Body(), &structure)
 
@@ -86,7 +87,6 @@ func (impl authImpl) Register(c *fiber.Ctx) (*responses_v1.User, error) {
 	}
 
 	// Store to elasticsearch
-	var userIndex *indices.User
 	_, _ = helpers.ConvertToOtherStruct(user, &userIndex)
 	dataByte, _ := json.Marshal(userIndex)
 	err = impl.elastic.AddDocument(userIndex.IndexName(), dataByte)
