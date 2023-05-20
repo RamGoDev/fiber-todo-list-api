@@ -52,7 +52,12 @@ func IsExistsUser(query *gorm.DB, user *models.User) (*models.User, string) {
 func (impl userImpl) List(filter map[string]interface{}, pagination helpers.Pagination) *helpers.Pagination {
 	var users []models.User
 	var user models.User
+	// var userIndex *indices.User
 	db := database.DB
+
+	// respElastic, _ := impl.elastic.SearchAll(userIndex.IndexName(), "*", pagination)
+
+	// helpers.ConvertToOtherStruct(respElastic, &pagination)
 
 	queryString := helpers.ConvertToQueryString(filter)
 	cacheKey := fmt.Sprintf("%s_%s", user.CacheBaseKey(), queryString)

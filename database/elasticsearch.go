@@ -2,7 +2,10 @@ package database
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"todo-list/app/indices"
 	"todo-list/configs"
 	"todo-list/helpers"
@@ -28,6 +31,9 @@ type Elasticsearch interface {
 
 	// Delete Index
 	DeleteIndex(indexName []string) error
+
+	// Search all
+	SearchAll(indexName string, search string, pagination helpers.Pagination) (map[string]interface{}, error)
 
 	// Add document
 	AddDocument(indexName string, data []byte) error
@@ -115,6 +121,55 @@ func (impl elasticsearchImpl) DeleteIndex(indexName []string) error {
 	}
 
 	return nil
+}
+
+func (impl elasticsearchImpl) SearchAll(indexName string, search string, pagination helpers.Pagination) (map[string]interface{}, error) {
+	var err error
+	var res *esapi.Response
+	var buf bytes.Buffer
+	var resp map[string]interface{}
+
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"query_string": map[string]interface{}{
+				"query": search,
+			},
+		},
+		"size": pagination.Limit,
+		"from": pagination.Limit * pagination.Page,
+	}
+
+	if err = json.NewEncoder(&buf).Encode(query); err != nil {
+		log.Fatalf("Error encoding query: %s", err)
+	}
+
+	// Perform the search request.
+	res, err = Elastic.Search(
+		Elastic.Search.WithContext(ctx),
+		Elastic.Search.WithIndex(indexName),
+		Elastic.Search.WithBody(&buf),
+		Elastic.Search.WithTrackTotalHits(true),
+		Elastic.Search.WithPretty(),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(bytes))
+
+	resp, err = helpers.ByteToMapStringInterface(bytes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 func (impl elasticsearchImpl) AddDocument(indexName string, data []byte) error {
