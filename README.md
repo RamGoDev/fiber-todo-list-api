@@ -1,7 +1,23 @@
-# Golang Todo List API
+# Todo List API
 
-Requirements:
+## About
+Restful API that develops with Go Fiber Framework for CRUD Todo List with Repository pattern that supports caching and Elasticsearch. This project also implements the pipeline to make it easier for search improvement.
+
+## Requirements:
 - Go version: 1.20.1
+
+## Features:
+- Restful CRUD Todo List
+- Middleware
+- Validator
+- Seeder
+- Pipline
+- Database (MySQL/PostgreSQL)
+- Caching (Redis/Memcache)
+- [WIP] Elasticsearch 
+- Pipline
+- Dockerize
+- Swagger
 
 # Setup
 ## Without Docker
@@ -32,3 +48,9 @@ Requirements:
 ## References
 - [Go Fiber Web Framework](https://docs.gofiber.io)
 - Inspired by [Goshaka Starter](https://github.com/auliawiguna/goshaka-starter)
+
+## Coming soon
+- Fixing Elasticsearch integration
+- Implement ACL (Access Control List) and manage users
+- Add unit test
+- Support GraphQL
